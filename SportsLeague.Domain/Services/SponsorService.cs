@@ -165,7 +165,7 @@ public class SponsorService : ISponsorService
 
     public async Task<IEnumerable<Tournament>> GetTournamentsBySponsorAsync(int sponsorId)
     {
-        var sponsor = await _sponsorRepository.GetByIdAsync(sponsorId);
+        var sponsor = await _sponsorRepository.GetByIdWithTournamentsAsync(sponsorId);
 
         if (sponsor == null)
             throw new KeyNotFoundException("Sponsor no encontrado");

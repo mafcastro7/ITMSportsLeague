@@ -91,18 +91,20 @@ public class SponsorController : ControllerBase
     }
 
     //Vincular sponsor a torneo
-    [HttpPost("link")]
-    public async Task<ActionResult> LinkSponsorToTournament(TournamentSponsorRequestDTO dto)
+    [HttpPost("{id}/tournaments")]
+    public async Task<ActionResult> LinkSponsorToTournament(
+        int id,
+        TournamentSponsorRequestDTO dto)
     {
         try
         {
             await _sponsorService.LinkSponsorToTournamentAsync(
-                dto.SponsorId,
+                id,
                 dto.TournamentId,
                 dto.ContractAmount
             );
 
-            return Ok(new { message = "Sponsor vinculado al torneo exitosamente" });
+            return Created("", new { message = "Sponsor vinculado al torneo." });
         }
         catch (KeyNotFoundException ex)
         {
@@ -115,30 +117,18 @@ public class SponsorController : ControllerBase
     }
 
     //Desvincular sponsor de torneo
-    [HttpDelete("Unlink")]
-    public async Task<ActionResult> UnlinkSponsorFromTournament(TournamentSponsorRequestDTO dto)
+    [HttpDelete("{id}/tournaments/{tid}")]
+    public async Task<ActionResult> UnlinkSponsorFromTournament(int id, int tid)
     {
         try
         {
-            await _sponsorService.UnlinkSponsorFromTournamentAsync(
-                dto.SponsorId,
-                dto.TournamentId
-            );
-
+            await _sponsorService.UnlinkSponsorFromTournamentAsync(id, tid);
             return NoContent();
         }
         catch (KeyNotFoundException ex)
         {
             return NotFound(new { message = ex.Message });
         }
-    }
-
-    //Obtener sponsors por torneo
-    [HttpGet("by-tournament/{tournamentId}")]
-    public async Task<ActionResult<IEnumerable<SponsorResponseDTO>>> GetByTournament(int tournamentId)
-    {
-        var sponsors = await _sponsorService.GetSponsorsByTournamentAsync(tournamentId);
-        return Ok(_mapper.Map<IEnumerable<SponsorResponseDTO>>(sponsors));
     }
 
     //Obtener torneos por sponsor
