@@ -43,7 +43,6 @@ public class SponsorService : ISponsorService
 
     public async Task<Sponsor> CreateAsync(Sponsor sponsor)
     {
-        // Validar nombre duplicado
         var exists = await _sponsorRepository.ExistsByNameAsync(sponsor.Name);
         if (exists)
         {
@@ -61,7 +60,6 @@ public class SponsorService : ISponsorService
         if (existing == null)
             throw new KeyNotFoundException($"No se encontró el sponsor con ID {id}");
 
-        // Validar nombre duplicado (si es el caso de que cambia el nombre)
         if (existing.Name != sponsor.Name)
         {
             var exists = await _sponsorRepository.ExistsByNameAsync(sponsor.Name);
@@ -97,20 +95,18 @@ public class SponsorService : ISponsorService
     {
         if (contractAmount <= 0)
         {
-            throw new InvalidOperationException("El monto del contrato debe ser mayor a 0");
+            throw new InvalidOperationException(
+                "El monto del contrato debe ser mayor a 0");
         }
 
-        // Validar sponsor existe
         var sponsorExists = await _sponsorRepository.ExistsAsync(sponsorId);
         if (!sponsorExists)
             throw new KeyNotFoundException($"No se encontró el sponsor con ID {sponsorId}");
 
-        // Validar torneo existe
         var tournamentExists = await _tournamentRepository.ExistsAsync(tournamentId);
         if (!tournamentExists)
             throw new KeyNotFoundException($"No se encontró el torneo con ID {tournamentId}");
 
-        // Validar que no esté duplicado
         var existing = await _tournamentSponsorRepository
             .GetByTournamentAndSponsorAsync(tournamentId, sponsorId);
 
@@ -120,7 +116,7 @@ public class SponsorService : ISponsorService
                 "Este sponsor ya está vinculado a este torneo");
         }
 
-        var tournamentSponsor = new TournamentSponsor
+        var relation = new TournamentSponsor
         {
             SponsorId = sponsorId,
             TournamentId = tournamentId,
@@ -132,7 +128,7 @@ public class SponsorService : ISponsorService
             "Linking sponsor {SponsorId} to tournament {TournamentId}",
             sponsorId, tournamentId);
 
-        await _tournamentSponsorRepository.CreateAsync(tournamentSponsor);
+        await _tournamentSponsorRepository.CreateAsync(relation);
     }
 
     // Desvincular
@@ -154,7 +150,7 @@ public class SponsorService : ISponsorService
         await _tournamentSponsorRepository.DeleteAsync(existing.Id);
     }
 
-    //Obtener sponsors por torneo
+    // Obtener sponsors de un torneo
     public async Task<IEnumerable<Sponsor>> GetSponsorsByTournamentAsync(int tournamentId)
     {
         var tournamentExists = await _tournamentRepository.ExistsAsync(tournamentId);
@@ -166,5 +162,16 @@ public class SponsorService : ISponsorService
 
         return relations.Select(ts => ts.Sponsor);
     }
-}
 
+    public async Task<IEnumerable<Tournament>> GetTournamentsBySponsorAsync(int sponsorId)
+    {
+        var sponsor = await _sponsorRepository.GetByIdAsync(sponsorId);
+
+        if (sponsor == null)
+            throw new KeyNotFoundException("Sponsor no encontrado");
+
+        return sponsor.TournamentSponsors
+            .Select(ts => ts.Tournament)
+            .ToList();
+    }
+}
