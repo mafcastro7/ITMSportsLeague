@@ -14,5 +14,10 @@ public class Team : AuditBase
     //IEnumerable
     //ICollectionx  
 
+    // Partidos como local
+    public ICollection<Match> HomeMatches { get; set; } = new List<Match>();
+    // Partidos como visitante
+    public ICollection<Match> AwayMatches { get; set; } = new List<Match>();
+
 }
 
